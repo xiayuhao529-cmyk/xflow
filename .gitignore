@@ -1,0 +1,87 @@
+# Dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Runtime data
+*.pid
+*.seed
+*.pid.lock
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Thumbnails
+._*
+
+# Files that might appear on external disk
+.Spotlight-V100
+.Trashes
+
+# IDE
+.vscode/
+.idea/
+.cursor/
+*.swp
+*.swo
+
+# Output directories
+output/
+scratch/
+
+# Large files
+*.7z
+*.zip
+*.tar.gz
+
+# Logs
+logs/
+*.log
+
+# Temporary files
+tmp/
+temp/
+
+# Sensitive data
+cookies.txt
+pay.txt
+
+# Internal dev notes / scratch files (not for open source)
+oioiANDxflow.txt
+helpers_escaped.txt
+helpers_block.js
+projects_list_route.js
+
+# Cloud deployment & payment (kept local, not open-sourced)
+CLOUD_DEPLOYMENT_GUIDE.md
+docs/alipay_production_guide.md
+pay_alipay.html
+recharge.html
+recharge.js
+migrate_all.js
+
+# Build artifacts
+build/
+dist/
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+*.sqlite-shm
+*.sqlite-wal
+# Payment skill doc & old UI references (kept local)
+"剧本拆解skill/AliPaySKILL.md"
+"剧本拆解skill/UI参考/"
+# SSH tunnel script with server IP (kept local)
+scripts/

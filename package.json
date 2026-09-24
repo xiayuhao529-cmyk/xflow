@@ -1,0 +1,30 @@
+{
+  "name": "xflow",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.js",
+  "scripts": {
+    "dev": "node server.js",
+    "start": "NODE_ENV=production node server.js"
+  },
+  "keywords": ["ai", "novel-to-video", "storyboard", "short-drama", "text-to-image", "ai-video", "screenplay"],
+  "author": "xiayuhao",
+  "license": "SEE LICENSE IN LICENSE",
+  "type": "commonjs",
+  "dependencies": {
+    "alipay-sdk": "^4.14.0",
+    "bcrypt": "^6.0.0",
+    "better-sqlite3": "^12.8.0",
+    "bullmq": "^5.73.4",
+    "concurrently": "^9.2.1",
+    "connect-redis": "^9.0.0",
+    "cors": "^2.8.6",
+    "dotenv": "^17.3.1",
+    "express": "^5.2.1",
+    "express-rate-limit": "^8.3.2",
+    "express-session": "^1.19.0",
+    "helmet": "^8.1.0",
+    "ioredis": "^5.10.1",
+    "mongoose": "^9.4.1"
+  }
+}

@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Xflow 用户管理</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <div class="admin-page">
+      <div class="admin-top">
+        <div>
+          <div class="admin-title">用户管理后台</div>
+          <div class="admin-subtitle">管理员手机号需在服务端 <code class="admin-code">ADMIN_PHONES</code> 中配置。</div>
+        </div>
+        <div class="admin-top-actions">
+          <span id="adminSelfPhone" class="admin-self"></span>
+          <a class="settings-link-btn" href="./workspace.html">工作台</a>
+          <button type="button" class="ghost" id="adminLogoutBtn">退出登录</button>
+        </div>
+      </div>
+
+      <div id="adminGate" class="admin-gate hidden"></div>
+
+      <div id="adminMain" class="hidden">
+        <div class="admin-toolbar">
+          <input type="search" id="adminSearch" class="admin-search" placeholder="搜索手机号或用户 ID" />
+          <button type="button" class="primary" id="adminSearchBtn">搜索</button>
+          <span class="admin-hint" id="adminListMeta"></span>
+        </div>
+
+        <div class="admin-table-wrap">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>手机号</th>
+                <th>用户 ID</th>
+                <th>积分余额</th>
+                <th>累计消耗</th>
+                <th>状态</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="adminUserRows"></tbody>
+          </table>
+        </div>
+
+        <div class="admin-pagination">
+          <button type="button" class="ghost" id="adminPrevPage">上一页</button>
+          <span id="adminPageLabel"></span>
+          <button type="button" class="ghost" id="adminNextPage">下一页</button>
+        </div>
+
+        <div class="panel admin-detail" id="adminDetail">
+          <h2>用户详情</h2>
+          <p class="admin-detail-placeholder" id="adminDetailPlaceholder">点击列表中的「详情」查看</p>
+          <div id="adminDetailBody" class="hidden">
+            <div class="admin-detail-grid" id="adminDetailSummary"></div>
+            <div class="admin-detail-actions">
+              <label class="admin-inline">
+                <span>调整积分（正加负减）</span>
+                <input type="number" id="adminDelta" class="admin-input" step="1" />
+              </label>
+              <label class="admin-inline admin-grow">
+                <span>原因（必填）</span>
+                <input type="text" id="adminReason" class="admin-input" placeholder="例如：活动赠送 / 对账冲正" />
+              </label>
+              <button type="button" class="primary" id="adminApplyPoints">提交调整</button>
+              <label class="admin-inline admin-toggle">
+                <input type="checkbox" id="adminDisabledToggle" />
+                <span>禁用账号（禁止登录与调用接口）</span>
+              </label>
+              <button type="button" class="ghost" id="adminSaveDisabled">保存账号状态</button>
+            </div>
+            <h3 class="admin-logs-title">最近账单（最多 80 条）</h3>
+            <pre id="adminLogs" class="log admin-logs"></pre>
+          </div>
+        </div>
+
+        <div class="panel admin-detail" id="adminPayments">
+          <h2>支付订单（支付宝）</h2>
+          <div class="admin-toolbar" style="padding:0;margin:0 0 12px;">
+            <input type="search" id="adminPaySearch" class="admin-search" placeholder="搜索订单号 / 手机号 / 用户ID" />
+            <input type="date" id="adminPayFrom" class="admin-search" style="max-width:180px;" />
+            <input type="date" id="adminPayTo" class="admin-search" style="max-width:180px;" />
+            <select id="adminPayStatus" class="admin-search" style="max-width:140px;">
+              <option value="">全部状态</option>
+              <option value="PAID">PAID</option>
+              <option value="CREATED">CREATED</option>
+              <option value="PENDING">PENDING</option>
+              <option value="CLOSED">CLOSED</option>
+            </select>
+            <select id="adminPayCredited" class="admin-search" style="max-width:140px;">
+              <option value="">全部入账</option>
+              <option value="1">已入账</option>
+              <option value="0">未入账</option>
+            </select>
+            <button type="button" class="primary" id="adminPaySearchBtn">搜索</button>
+            <button type="button" class="ghost" id="adminPayExportBtn">导出 CSV</button>
+            <span class="admin-hint" id="adminPayMeta"></span>
+          </div>
+          <div class="admin-hint" id="adminPaySummary" style="margin:-6px 0 10px;"></div>
+          <div class="admin-table-wrap">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>时间</th>
+                  <th>订单号</th>
+                  <th>渠道</th>
+                  <th>用户</th>
+                  <th>内容</th>
+                  <th>金额</th>
+                  <th>积分</th>
+                  <th>状态</th>
+                  <th>入账</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="adminPayRows"></tbody>
+            </table>
+          </div>
+
+          <h3 class="admin-logs-title" style="margin-top:14px;">订单详情（选中后显示）</h3>
+          <pre id="adminPayDetail" class="log admin-logs"></pre>
+        </div>
+
+
+        <div class="panel admin-detail" id="adminModels">
+          <h2>动态模型管理配置</h2>
+          <div class="admin-hint" style="margin-bottom:12px;">此处的模型会在不重启服务的情况下直接在工作台前台配置中生效（文本模型走统一的全局底座，图片模型走 ToAPIs 底座）。价格等同挂牌汇率标准（如 GPT4水平：提示词 3.0 / 补全 24.0），后台自动根据比例扣减。</div>
+
+          <div class="field-row" style="margin: 0 0 20px; max-width: 720px;">
+            <label for="adminOioiapiBaseUrl" class="admin-inline" style="display: block; margin-bottom: 6px; font-weight: 600;">自定义 oioiapi 上游 Base URL</label>
+            <p class="admin-hint" style="margin: 0 0 8px;">用户选择「自定义 oioiapi」通道时，服务端会请求此 OpenAI 兼容地址（须以 <code class="admin-code">/v1</code> 结尾，如 <code class="admin-code">https://oioiapi.site/v1</code>）。留空则使用环境变量 <code class="admin-code">OIOIAPI_BASE_URL</code>（未设置时默认 oioiapi 官方基址）。保存后与下方模型表一并热更新，无需重启。</p>
+            <input type="text" id="adminOioiapiBaseUrl" class="admin-search" style="width: 100%; max-width: 100%;" placeholder="https://oioiapi.site/v1" autocomplete="url" />
+          </div>
+          
+          <h3 class="admin-logs-title">文本模型列表</h3>
+          <div class="admin-table-wrap">
+            <table class="admin-table" style="margin-bottom: 8px;">
+              <thead>
+                <tr>
+                  <th>Model ID</th>
+                  <th>前台展示名称</th>
+                  <th>提示副标题(Hint)</th>
+                  <th>Prompt折算原价</th>
+                  <th>Completion折算原价</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody id="adminTextModelRows"></tbody>
+            </table>
+            <button type="button" class="ghost" id="adminAddTextModelBtn">+ 添加文本模型</button>
+          </div>
+
+          <h3 class="admin-logs-title" style="margin-top:20px;">图片模型列表</h3>
+          <div class="admin-table-wrap">
+            <table class="admin-table" style="margin-bottom: 8px;">
+              <thead>
+                <tr>
+                  <th>Model ID (前台ID)</th>
+                  <th>前台展示名称</th>
+                  <th>ToAPIs底层模型名</th>
+                  <th>单张图积分售价</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody id="adminImageModelRows"></tbody>
+            </table>
+            <button type="button" class="ghost" id="adminAddImageModelBtn">+ 添加图片模型</button>
+          </div>
+
+          <div class="admin-toolbar" style="margin-top: 24px; padding:0; border: none; background: transparent;">
+            <button type="button" class="primary" id="adminSaveModelsBtn">保存并立即全网生效</button>
+            <span class="admin-hint">⚠️ 保存后前台用户将立刻看到您添加的模型选项。</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="./admin.js"></script>
+  </body>
+</html>

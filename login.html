@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Xflow 登录</title>
+    <link rel="stylesheet" href="./style.css" />
+    <style>
+      /* Extra atmosphere for login page */
+      .login-sparkle {
+        position: fixed;
+        border-radius: 50%;
+        pointer-events: none;
+        z-index: 0;
+        animation: loginTwinkle linear infinite;
+      }
+      @keyframes loginTwinkle {
+        0%, 100% { opacity: 0.06; transform: scale(0.6); }
+        50%       { opacity: 0.80; transform: scale(1.2); }
+      }
+      .login-petal {
+        position: fixed;
+        top: -40px;
+        pointer-events: none;
+        z-index: 0;
+        opacity: 0;
+        animation: loginPetalFall linear infinite;
+      }
+      @keyframes loginPetalFall {
+        0%   { opacity: 0;    transform: translateY(0)      translateX(0)    rotate(0deg); }
+        5%   { opacity: 0.55; }
+        90%  { opacity: 0.40; }
+        100% { opacity: 0;    transform: translateY(110vh) translateX(50px) rotate(480deg); }
+      }
+      /* login orb under card */
+      .login-orb {
+        position: fixed;
+        left: 50%; top: 50%;
+        transform: translate(-50%, -50%);
+        width: min(70vw, 480px);
+        aspect-ratio: 1/1;
+        border-radius: 50%;
+        background: radial-gradient(circle,
+          rgba(167,139,250,0.55) 0%,
+          rgba(124,58,237,0.28) 40%,
+          transparent 70%
+        );
+        filter: blur(50px);
+        z-index: 0;
+        pointer-events: none;
+        animation: loginOrbPulse 6s ease-in-out infinite;
+      }
+      @keyframes loginOrbPulse {
+        0%,100% { opacity:.8; }
+        50%     { opacity:1; }
+      }
+
+      /* Login brand header */
+      .login-brand {
+        text-align: center;
+        margin-bottom: 20px;
+      }
+      .login-brand-name {
+        font-size: 28px;
+        font-weight: 900;
+        letter-spacing: -0.03em;
+        background: linear-gradient(135deg, #DDD6FE 0%, #C4B5FD 50%, #F9A8D4 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+      .login-brand-tagline {
+        margin-top: 4px;
+        font-size: 12px;
+        color: var(--text-3, #5F5490);
+        letter-spacing: 0.05em;
+      }
+      .login-brand-tagline::before { content: "❀  "; opacity: 0.7; }
+      .login-brand-tagline::after  { content: "  ❀"; opacity: 0.7; }
+
+      /* Auth-wrap needs z-index for layering */
+      .auth-wrap { position: relative; z-index: 1; }
+    </style>
+  </head>
+  <body>
+    <div class="login-orb" aria-hidden="true"></div>
+
+    <div class="auth-wrap">
+      <div class="auth-card">
+        <div class="login-brand">
+          <div class="login-brand-name">Xflow</div>
+          <div class="login-brand-tagline">漫剧制作与资产管理平台</div>
+        </div>
+
+        <div class="auth-title">欢迎回来</div>
+        <div class="auth-subtitle">使用已注册账号密码登录</div>
+
+        <label class="auth-label" for="phoneInput">手机号</label>
+        <input id="phoneInput" type="tel" inputmode="numeric" autocomplete="tel" maxlength="11" pattern="[0-9]*" placeholder="11位手机号" />
+        <label class="auth-label" for="passwordInput" style="margin-top:10px;">密码</label>
+        <input id="passwordInput" type="password" placeholder="请输入密码" />
+
+        <div class="actions" style="margin-top:14px;">
+          <button id="loginBtn" class="primary" style="flex:1;">登录</button>
+          <button id="openRegisterModalBtn" style="flex:1;">注册账号</button>
+        </div>
+        <div class="auth-links">
+          <button id="openForgotModalBtn" type="button" class="link-btn">忘记密码？</button>
+        </div>
+
+        <pre id="authLog" class="auth-log">等待操作...</pre>
+      </div>
+    </div>
+
+    <div id="registerModal" class="modal-backdrop hidden">
+      <div class="modal-card">
+        <h3 style="margin:0 0 14px;font-size:18px;">注册账号</h3>
+        <div id="registerError" class="form-error hidden"></div>
+        <label class="auth-label" for="regPhoneInput">手机号</label>
+        <input id="regPhoneInput" type="tel" inputmode="numeric" autocomplete="tel" maxlength="11" pattern="[0-9]*" placeholder="11位中国大陆手机号" />
+        <label class="auth-label" for="regPasswordInput" style="margin-top:10px;">密码</label>
+        <input id="regPasswordInput" type="password" placeholder="请输入密码（至少6位）" />
+        <label class="auth-label" for="regCodeInput" style="margin-top:10px;">验证码（功能模块占位）</label>
+        <div class="actions">
+          <input id="regCodeInput" type="text" placeholder="输入短信验证码" />
+          <button id="sendCodeBtn">发送验证码</button>
+        </div>
+        <div id="regCodeStatus" class="form-hint" style="margin-top:8px;"></div>
+        <div class="actions" style="margin-top:14px;">
+          <button id="confirmRegisterBtn" class="primary">确认注册</button>
+          <button id="cancelRegisterBtn">取消</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="forgotModal" class="modal-backdrop hidden">
+      <div class="modal-card">
+        <h3 style="margin:0 0 14px;font-size:18px;">重置密码</h3>
+        <div id="forgotError" class="form-error hidden"></div>
+        <label class="auth-label" for="forgotPhoneInput">手机号</label>
+        <input id="forgotPhoneInput" type="tel" inputmode="numeric" autocomplete="tel" maxlength="11" pattern="[0-9]*" placeholder="11位注册手机号" />
+        <label class="auth-label" for="forgotNewPasswordInput" style="margin-top:10px;">新密码</label>
+        <input id="forgotNewPasswordInput" type="password" placeholder="请输入新密码（至少6位）" />
+        <label class="auth-label" for="forgotCodeInput" style="margin-top:10px;">验证码（功能模块占位）</label>
+        <div class="actions">
+          <input id="forgotCodeInput" type="text" placeholder="输入验证码（当前不校验）" />
+          <button id="forgotSendCodeBtn" type="button">发送验证码</button>
+        </div>
+        <div id="forgotCodeStatus" class="form-hint" style="margin-top:8px;"></div>
+        <div class="actions" style="margin-top:14px;">
+          <button id="confirmForgotBtn" class="primary" type="button">确认重置</button>
+          <button id="cancelForgotBtn" type="button">取消</button>
+        </div>
+      </div>
+    </div>
+
+    <script src="./auth.js"></script>
+    <script>
+      /* light particles for login bg */
+      (function () {
+        const colors = ["rgba(167,139,250,1)","rgba(249,168,212,1)","rgba(255,255,255,1)","rgba(196,181,253,1)"];
+        for (let i = 0; i < 18; i++) {
+          const el = document.createElement("div");
+          el.className = "login-sparkle";
+          const s = 1 + Math.random() * 2.5;
+          const c = colors[i % colors.length];
+          el.style.cssText = [
+            `width:${s}px`,`height:${s}px`,
+            `left:${Math.random()*100}vw`,
+            `top:${Math.random()*100}vh`,
+            `background:${c}`,
+            `box-shadow:0 0 ${s*3}px ${c}`,
+            `animation-duration:${3+Math.random()*5}s`,
+            `animation-delay:${-Math.random()*6}s`,
+          ].join(";");
+          document.body.appendChild(el);
+        }
+
+        const petalSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" width="20" height="20"><g opacity="0.75"><ellipse cx="20" cy="10" rx="7" ry="11" fill="#F9A8D4" transform="rotate(0 20 20)"/><ellipse cx="20" cy="10" rx="7" ry="11" fill="#F9A8D4" transform="rotate(72 20 20)"/><ellipse cx="20" cy="10" rx="7" ry="11" fill="#FBCFE8" transform="rotate(144 20 20)"/><ellipse cx="20" cy="10" rx="7" ry="11" fill="#F9A8D4" transform="rotate(216 20 20)"/><ellipse cx="20" cy="10" rx="7" ry="11" fill="#FBCFE8" transform="rotate(288 20 20)"/><circle cx="20" cy="20" r="3.5" fill="#FDE68A"/></g></svg>`;
+        const src = "data:image/svg+xml;base64," + btoa(petalSvg);
+        for (let i = 0; i < 4; i++) {
+          const el = document.createElement("img");
+          el.className = "login-petal";
+          el.src = src;
+          el.setAttribute("aria-hidden","true");
+          const sz = 14 + Math.random() * 14;
+          el.style.cssText = [
+            `width:${sz}px`,`height:${sz}px`,
+            `left:${5+Math.random()*90}vw`,
+            `animation-duration:${18+Math.random()*12}s`,
+            `animation-delay:${-Math.random()*20}s`,
+          ].join(";");
+          document.body.appendChild(el);
+        }
+      })();
+    </script>
+  </body>
+</html>

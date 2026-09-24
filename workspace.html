@@ -1,0 +1,393 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Xflow 工作台</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <div class="layout">
+      <div id="sidebarBackdrop" class="sidebar-backdrop" aria-hidden="true"></div>
+      <aside class="sidebar" id="sidebarNav" aria-label="项目与导航">
+        <div class="sidebar-head">
+          <a class="brand brand-link" href="/" title="返回主页">Xflow</a>
+          <div class="sidebar-title-row">
+            <div class="sidebar-title">项目管理</div>
+            <button id="openAiChatBtn" type="button" class="ai-entry-btn" title="打开 Xflow 剧本拆解助手">
+              <span class="ai-entry-icon">AI</span>
+              <span class="ai-entry-text">
+                <span class="ai-entry-title">Xflow剧本拆解助手</span>
+                <span class="ai-entry-subtitle">点击开始智能对话</span>
+              </span>
+            </button>
+            <a class="recharge-entry-btn" href="./recharge.html" title="充值中心">
+              <span class="recharge-entry-icon">￥</span>
+              <span class="ai-entry-text">
+                <span class="ai-entry-title">充值中心</span>
+                <span class="ai-entry-subtitle">查看套餐与积分计费规则</span>
+              </span>
+            </a>
+            <a
+              id="adminEntryLink"
+              class="recharge-entry-btn admin-entry-btn hidden"
+              href="./admin.html"
+              title="用户管理后台"
+            >
+              <span class="recharge-entry-icon admin-entry-icon">管</span>
+              <span class="ai-entry-text">
+                <span class="ai-entry-title">管理后台</span>
+                <span class="ai-entry-subtitle">用户与积分管理（仅管理员）</span>
+              </span>
+            </a>
+          </div>
+        </div>
+
+        <div class="sidebar-actions">
+          <button id="createProjectBtn">创建项目</button>
+        </div>
+
+        <div class="sidebar-list" id="projectList"></div>
+
+        <div class="sidebar-spacer"></div>
+
+        <button id="settingsNavBtn">设置</button>
+      </aside>
+
+      <section class="main">
+        <div class="topbar">
+          <button type="button" id="sidebarMenuBtn" class="sidebar-menu-btn ghost" aria-label="打开菜单" aria-expanded="false" aria-controls="sidebarNav">
+            ☰
+          </button>
+          <div class="topbar-left">
+            <div class="topbar-project-row">
+              <div class="project-name" id="projectNameLabel">未选择项目</div>
+              <a id="adminTopbarLink" class="admin-topbar-link hidden" href="./admin.html" title="用户与积分管理"
+                >管理后台</a>
+            </div>
+            <div class="project-visual">
+              <label for="visualStyleInput">视觉风格偏好</label>
+              <div class="project-visual-row">
+                <input id="visualStyleInput" type="text" value="写实风，电影感，冷暖对比色调" />
+                <button id="saveVisualStyleBtn" type="button">保存风格</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="topbar-right">
+            <div class="tabs">
+              <button class="tab-btn is-active" data-tab="novel">小说拆解</button>
+              <button class="tab-btn" data-tab="outline">大纲管理</button>
+              <button class="tab-btn" data-tab="assets">全文资产管理</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="tab-content">
+          <!-- Novel Split -->
+          <div class="tab-panel is-active" id="tab-novel">
+            <div class="panel">
+              <h2>1) 导入小说（上传或粘贴）</h2>
+              <div class="field-row">
+                <label>上传文件</label>
+                <input id="novelFileInput" type="file" accept=".txt,.md,.doc,.docx" />
+              </div>
+              <div class="field">
+                <label for="novelTextInput">小说原文</label>
+                <textarea
+                  id="novelTextInput"
+                  rows="14"
+                  placeholder="请输入本集剧本内容（建议每次输入 1-2 集），内容过多时建议先拆分后分批导入，并使用「追加章节」持续补充。"
+                ></textarea>
+                <div style="margin-top:6px;color:var(--text-2);font-size:12px;line-height:1.5;">
+                  提示：建议优先输入一至两集进行拆解；若为多集内容，可分批导入后多次点击「追加章节」。
+                </div>
+              </div>
+              <div class="actions">
+                <button id="splitChaptersBtn" class="primary">拆解为章节</button>
+                <button id="appendChaptersBtn">追加章节</button>
+                <button id="reSplitChaptersBtn">重新拆解章节</button>
+              </div>
+            </div>
+
+            <div class="panel">
+              <h2>2) 选择章节并提取大纲</h2>
+              <div class="actions">
+                <button id="selectAllChaptersBtn">全选</button>
+                <button id="clearAllChaptersBtn">清空</button>
+                <button id="extractOutlineBtn" class="primary">提取选中章节大纲</button>
+                <button id="reExtractOutlineBtn">重新提取选中章节大纲</button>
+                <button id="chapterViewToggleBtn" title="切换章节列表显示模式" style="margin-left:auto;">⊞ 紧凑视图</button>
+              </div>
+                <p style="color:var(--text-3);font-size:12px;margin:8px 0 0;">
+                「提取」会跳过已有大纲；「重新提取」将按当前技能调用 AI 覆盖选中章节的大纲。长任务进行中请勿刷新：阶段1完成后会先落盘，刷新后可再点「提取」仅续跑物品/故事线（不重复扣阶段1）。
+              </p>
+              <div id="chapterCheckboxList" class="chapter-list"></div>
+            </div>
+
+            <div class="panel">
+              <div class="log-wrap">
+                <div class="log-title">运行日志</div>
+                <pre id="runLog" class="log">等待执行...</pre>
+              </div>
+            </div>
+          </div>
+
+          <!-- Outline -->
+          <div class="tab-panel" id="tab-outline">
+            <div class="panel">
+              <h2>大纲管理</h2>
+              <div class="field-row">
+                <label for="outlineChapterSelect">章节</label>
+                <select id="outlineChapterSelect"></select>
+              </div>
+              <div class="btn-group">
+                <div class="btn-group-label">功能区</div>
+                <div class="actions">
+                  <button id="loadOutlineBtn">加载该章节大纲</button>
+                  <button id="saveOutlineModuleBtn">保存当前板块</button>
+                  <button id="saveOutlineBtn" class="primary">保存大纲编辑</button>
+                  <button id="exportOutlineBtn">导出大纲</button>
+                </div>
+              </div>
+              <div class="btn-group">
+                <div class="btn-group-label">板块</div>
+                <div class="actions module-switch">
+                  <button id="outlineModCharactersBtn" data-mod="characters">人物</button>
+                  <button id="outlineModScenesBtn" data-mod="scenes">场景</button>
+                  <button id="outlineModItemsBtn" data-mod="items">物品</button>
+                  <button id="outlineModStorylineBtn" data-mod="storyline">故事线</button>
+                </div>
+              </div>
+            </div>
+            <div class="panel">
+              <h2 id="outlineModuleTitle">人物</h2>
+              <div id="outlineCards" class="cards-wrap"></div>
+            </div>
+          </div>
+
+          <!-- Assets -->
+          <div class="tab-panel" id="tab-assets">
+            <div class="panel">
+              <h2>全文剧本资产管理</h2>
+              <div class="field-row">
+                <label for="assetsChapterSelect">章节</label>
+                <select id="assetsChapterSelect"></select>
+              </div>
+              <div class="btn-group">
+                <div class="btn-group-label">功能区</div>
+                <div class="actions">
+                  <button id="loadAssetsBtn">加载该章节资产</button>
+                  <button id="generateCurrentChapterAssetsBtn" class="primary">生成当前章节资产</button>
+                  <button id="generateAssetsBtn" class="primary">生成/重生成选中资产</button>
+                  <button id="generateAllAssetsBtn">一键生成全部章节资产</button>
+                  <button id="saveAssetsModuleBtn">保存当前板块</button>
+                  <button id="saveAssetsBtn" class="primary">保存资产编辑</button>
+                  <button id="exportAssetsBtn">导出资产</button>
+                </div>
+                <div
+                  style="
+                    margin: 10px 0 0;
+                    padding: 10px 12px;
+                    border: 1px solid rgba(252,211,77,0.35);
+                    background: rgba(252,211,77,0.10);
+                    color: #FCD34D;
+                    border-radius: 10px;
+                    font-size: 13px;
+                    font-weight: 700;
+                    line-height: 1.5;
+                  "
+                >
+                  重要提醒：生成的图片资产请尽快保存到你的设备，本服务器会不定期清理或下线，历史图片可能无法长期保留。
+                </div>
+                <p style="color:var(--text-3);font-size:12px;margin:8px 0 0;">
+                  「生成当前章节资产 / 一键全部」会复用本章<strong>大纲</strong>中的人物、场景、物品与故事线，仅 AI 生成分镜脚本与分镜提示词；章节正文为原文。请先在大纲页提取本章大纲。长任务请勿刷新：分镜生成后会先写入磁盘，刷新后再点「生成」可仅补全分镜提示词。
+                  人物/场景/物品卡片内新增「按提示词生成图片」，图片会自动绑定到当前章节对应条目。
+                </p>
+              </div>
+              <div class="btn-group">
+                <div class="btn-group-label">板块</div>
+                <div class="actions module-switch">
+                  <button id="assetModCharactersBtn" data-amod="characters">人物</button>
+                  <button id="assetModScenesBtn" data-amod="scenes">场景</button>
+                  <button id="assetModItemsBtn" data-amod="items">物品</button>
+                  <button id="assetModStoryboardBtn" data-amod="storyboard">分镜脚本</button>
+                  <button id="assetModStoryboardPromptsBtn" data-amod="storyboardPrompts">分镜提示词</button>
+                  <button id="assetModChapterTextBtn" data-amod="chapterText">章节文本</button>
+                </div>
+              </div>
+            </div>
+            <div class="panel">
+              <h2 id="assetModuleTitle">人物</h2>
+              <div class="actions" id="assetCustomActions" style="margin-bottom:10px;">
+                <button id="addAssetEntryBtn" type="button">＋ 添加自定义条目</button>
+                <button id="polishAssetEntryBtn" type="button" class="primary">AI 润色选中条目</button>
+              </div>
+              <div id="assetCards" class="cards-wrap"></div>
+            </div>
+          </div>
+
+          <!-- Settings -->
+          <div class="tab-panel" id="tab-settings">
+            <div class="panel settings-panel custom-text-model-panel">
+              <h2>自定义文本模型</h2>
+              <p class="custom-text-hint">填写你在 <a href="https://oioiapi.site" target="_blank" rel="noopener">oioiapi</a> 的 API Key，即可在下方「文本模型」下拉中选择自定义通道，任务走你自己的账户扣费，<strong>不消耗 Xflow 积分</strong>。</p>
+              <label class="custom-text-switch-row">
+                <input type="checkbox" id="customTextEnable" />
+                <span>启用自定义文本通道</span>
+              </label>
+              <div class="field-row">
+                <label for="customTextProvider">厂商</label>
+                <select id="customTextProvider" disabled>
+                  <option value="oioiapi" selected>oioiapi</option>
+                </select>
+              </div>
+              <div class="field-row">
+                <label for="customTextBaseUrl">Base URL</label>
+                <input id="customTextBaseUrl" type="text" value="https://oioiapi.site/v1" readonly />
+              </div>
+              <div class="field-row">
+                <label for="customTextModelName">模型名称</label>
+                <input id="customTextModelName" type="text" placeholder="如 gpt-4o-mini / deepseek-chat" />
+              </div>
+              <div class="field-row">
+                <label for="customTextApiKey">API Key</label>
+                <input id="customTextApiKey" type="password" placeholder="留空则保持已保存的 Key 不变" autocomplete="new-password" />
+              </div>
+              <div class="custom-text-key-status" id="customTextKeyStatus"></div>
+              <div class="actions settings-actions">
+                <button id="saveCustomTextBtn" class="primary">保存自定义通道</button>
+                <button id="clearCustomTextBtn">清空配置</button>
+              </div>
+              <a class="settings-link-btn" style="margin-top:10px;" href="https://oioiapi.site" target="_blank" rel="noopener">去 oioiapi 充值 / 管理 Key →</a>
+            </div>
+            <div class="panel settings-panel">
+              <h2>设置</h2>
+              <div style="color:var(--text-1);margin-bottom:10px;">
+                当前用户手机号：<span id="mePhone">-</span>
+              </div>
+              <div style="color:var(--text-1);margin-bottom:10px;">
+                可切换已内置模型，切换后新任务将按当前模型调用。
+              </div>
+              <div id="billingWarnText" class="billing-warn hidden"></div>
+              <div class="billing-grid">
+                <div class="billing-card">
+                  <div class="billing-label">积分余额</div>
+                  <div id="pointsBalanceText" class="billing-value">-</div>
+                </div>
+                <div class="billing-card">
+                  <div class="billing-label">累计消耗积分</div>
+                  <div id="pointsSpentText" class="billing-value">-</div>
+                </div>
+                <div class="billing-card">
+                  <div class="billing-label">累计 Token</div>
+                  <div id="tokenUsageText" class="billing-value">-</div>
+                </div>
+              </div>
+              <div class="billing-last-wrap">
+                <div class="billing-last-title">最近一次模型调用</div>
+                <div id="lastUsageText" class="billing-last-content">暂无调用记录</div>
+              </div>
+              <div class="billing-last-wrap">
+                <div class="billing-last-title">最近账单明细</div>
+                <div id="billingLogsText" class="billing-last-content">暂无账单记录</div>
+              </div>
+              <div class="actions settings-actions">
+                <a class="settings-link-btn primary" href="./recharge.html">去充值中心</a>
+                <a id="adminSettingsLink" class="settings-link-btn hidden" href="./admin.html">管理后台</a>
+                <button id="refreshBillingBtn">刷新账单</button>
+              </div>
+              <div class="actions settings-actions">
+                <button id="openChangePasswordBtn">修改密码</button>
+              </div>
+              <div class="field-row">
+                <label for="textModelSelect">文本模型</label>
+                <select id="textModelSelect"></select>
+              </div>
+              <div class="field-row">
+                <label for="imageModelSelect">图片模型</label>
+                <select id="imageModelSelect"></select>
+              </div>
+              <div class="field-row">
+                <label for="imageAspectRatioSelect">图片参数（比例）</label>
+                <select id="imageAspectRatioSelect"></select>
+              </div>
+              <div class="actions settings-actions">
+                <button id="saveModelBtn">保存模型设置</button>
+                <button id="closeSettingsBtn">关闭设置</button>
+              </div>
+              <button id="logoutBtn" class="primary settings-logout-btn">退出登录</button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <div id="actionOverlay" class="action-overlay hidden">
+      <div class="action-overlay-card">
+        <div class="loader-dot"></div>
+        <div id="actionOverlayText">处理中...</div>
+        <div id="actionProgressWrap" class="action-progress-wrap hidden">
+          <div class="action-progress-bar">
+            <div id="actionProgressFill" class="action-progress-fill"></div>
+          </div>
+          <div id="actionProgressDetail" class="action-progress-detail"></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="successModal" class="modal-backdrop hidden">
+      <div class="modal-card" style="text-align:center;max-width:360px;">
+        <div style="font-size:40px;color:var(--primary);margin-bottom:8px;">&#10003;</div>
+        <div id="successModalText" style="font-size:16px;font-weight:700;margin-bottom:16px;">操作成功</div>
+        <button id="successModalConfirmBtn" class="primary" style="min-width:120px;">确认</button>
+      </div>
+    </div>
+
+    <div id="aiChatModal" class="modal-backdrop hidden">
+      <div class="modal-card ai-chat-modal-card">
+        <div class="ai-chat-head">
+          <h3>AI 对话助手</h3>
+          <button id="closeAiChatBtn" type="button">关闭</button>
+        </div>
+        <div id="aiChatMessages" class="ai-chat-messages"></div>
+        <div class="ai-chat-input-wrap">
+          <textarea id="aiChatInput" rows="3" placeholder="输入你的问题（Enter 发送，Shift + Enter 换行）；生图可勾选下方「生图模式」或使用 /img 提示词"></textarea>
+        </div>
+        <label class="ai-chat-image-mode">
+          <input type="checkbox" id="aiChatImageModeCheck" />
+          <span>生图模式（整段作为画面提示词，无需 /img）</span>
+        </label>
+        <div class="actions ai-chat-actions">
+          <button id="sendAiChatBtn" class="primary" type="button">发送</button>
+          <button id="clearAiChatBtn" type="button">清空对话</button>
+          <span id="aiChatModelLabel" class="ai-chat-model-label">当前文本模型：-</span>
+        </div>
+      </div>
+    </div>
+
+    <div id="changePasswordModal" class="modal-backdrop hidden">
+      <div class="modal-card" style="max-width:520px;">
+        <div class="ai-chat-head" style="margin-bottom:6px;">
+          <h3>修改密码</h3>
+          <button id="closeChangePasswordBtn" type="button">关闭</button>
+        </div>
+        <div id="changePasswordError" class="form-error hidden"></div>
+        <div class="field">
+          <label class="auth-label" for="oldPasswordInput">旧密码</label>
+          <input id="oldPasswordInput" type="password" placeholder="请输入旧密码" />
+        </div>
+        <div class="field">
+          <label class="auth-label" for="newPasswordInput">新密码</label>
+          <input id="newPasswordInput" type="password" placeholder="请输入新密码（至少6位）" />
+        </div>
+        <div class="actions" style="margin-top:12px;">
+          <button id="confirmChangePasswordBtn" class="primary" type="button">确认修改</button>
+          <button id="cancelChangePasswordBtn" type="button">取消</button>
+        </div>
+      </div>
+    </div>
+
+    <script src="./app.js?v=20260423_1"></script>
+  </body>
+</html>
